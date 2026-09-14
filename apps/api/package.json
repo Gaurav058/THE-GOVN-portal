@@ -1,0 +1,27 @@
+{
+  "name": "@govn/api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --build",
+    "start": "tsx src/index.ts",
+    "test": "tsx --test src/api.test.ts"
+  },
+  "dependencies": {
+    "@govn/database": "workspace:*",
+    "@govn/seo": "workspace:*",
+    "@govn/source-engine": "workspace:*",
+    "@govn/types": "workspace:*",
+    "@govn/validation": "workspace:*",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.9",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  }
+}
