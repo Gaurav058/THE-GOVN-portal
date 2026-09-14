@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { apiClient } from '../../config/api';
 import { JobCard } from '../../components/JobCard';
+import { EmptyState } from '../../components/EmptyState';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,18 +18,21 @@ export default async function JobsFilterSearchPage({
 }) {
   const { query, category, qualification, state, status } = searchParams;
 
-  const result = await apiClient.getJobs({
-    query,
-    category,
-    qualification,
-    state,
-    status: status as any,
-    limit: 50,
-  });
+  const [result, filters] = await Promise.all([
+    apiClient.getJobs({
+      query,
+      category,
+      qualification,
+      state,
+      status: status as any,
+      limit: 50,
+    }),
+    apiClient.getFilters(),
+  ]);
 
-  const categories = ['All', 'Civil Services', 'Railway', 'SSC', 'Banking', 'Police', 'Defence', 'Teaching', 'PSU'];
-  const qualifications = ['All', '10th', '12th', 'ITI', 'Diploma', 'Graduate', 'BTech', 'Post Graduate'];
-  const states = ['All', 'All India', 'Rajasthan', 'Uttar Pradesh', 'Delhi', 'Bihar', 'Maharashtra'];
+  const categories = ['All', ...filters.categories];
+  const qualifications = ['All', ...filters.qualifications];
+  const states = ['All', ...filters.states];
 
   return (
     <div className="space-y-6">
@@ -128,13 +132,10 @@ export default async function JobsFilterSearchPage({
 
       {/* Results Grid */}
       {result.total === 0 ? (
-        <div className="p-12 text-center bg-white rounded border border-slate-200">
-          <p className="text-slate-700 font-semibold text-sm">No vacancies match your current filter criteria.</p>
-          <p className="text-xs text-slate-500 mt-1">Try resetting qualification or location filters to see all available jobs.</p>
-          <Link href="/jobs" className="mt-4 inline-block text-xs bg-slate-900 text-white px-4 py-2 rounded">
-            View All Open Jobs
-          </Link>
-        </div>
+        <EmptyState
+          message="No vacancies match your current filter criteria."
+          subMessage="Try resetting qualification or location filters to see all available jobs."
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {result.data.map((job) => (

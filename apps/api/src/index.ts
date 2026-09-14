@@ -32,8 +32,14 @@ export function createApp() {
           return callback(null, true);
         }
 
-        // 3. Vercel preview and production domains
-        if (/^https:\/\/.*\.vercel\.app$/.test(origin) || origin.endsWith('govnportal.in')) {
+        // 3. Explicit production domains (User Portal, Admin Portal, Custom domains)
+        const productionOrigins = [
+          'https://web-user-portal.vercel.app',
+          'https://admin-govn-portal.vercel.app',
+          'https://govnportal.in',
+          'https://admin.govnportal.in',
+        ];
+        if (productionOrigins.includes(originLower)) {
           return callback(null, true);
         }
 

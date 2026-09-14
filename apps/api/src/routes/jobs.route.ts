@@ -36,8 +36,9 @@ jobsRouter.get('/latest', (req: Request, res: Response) => {
 // GET /api/v1/jobs/closing-soon
 jobsRouter.get('/closing-soon', (req: Request, res: Response) => {
   const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
-  const jobs = dbRepository.getClosingSoonJobs(limit);
-  res.json({ success: true, count: jobs.length, data: jobs });
+  const days = req.query.days ? parseInt(req.query.days as string, 10) : 14;
+  const jobs = dbRepository.getClosingSoonJobs(limit, days);
+  res.json({ success: true, count: jobs.length, windowDays: days, data: jobs });
 });
 
 // GET /api/v1/jobs/filters (facet counts)

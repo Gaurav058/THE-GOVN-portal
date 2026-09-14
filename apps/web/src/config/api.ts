@@ -22,23 +22,59 @@ export class WebApiClient {
     this.baseUrl = baseUrl.replace(/\/$/, '');
   }
 
-  private async get<T>(endpoint: string, fallback: T): Promise<T> {
-    try {
-      const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-      const res = await fetch(url, {
-        next: { revalidate: 60 },
-      });
-      if (!res.ok) {
-        return fallback;
+  private async get<T>(endpoint: string, fallback: T, retries = 1): Promise<T & { isError?: boolean }> {
+    const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+      try {
+        const res = await fetch(url, {
+          signal: controller.signal,
+          next: { revalidate: 60 },
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          if (attempt === retries) {
+            console.warn(`[WebApiClient] Non-200 response (${res.status}) from ${url}`);
+            const errFallback = Array.isArray(fallback) ? [...(fallback as any[])] : { ...fallback };
+            (errFallback as any).isError = true;
+            return errFallback as any;
+          }
+          continue;
+        }
+
+        const data = await res.json();
+        return data;
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        if (attempt === retries) {
+          console.warn(`[WebApiClient] Failed to fetch from ${url}: ${err?.message || err}`);
+          const errFallback = Array.isArray(fallback) ? [...(fallback as any[])] : { ...fallback };
+          (errFallback as any).isError = true;
+          return errFallback as any;
+        }
       }
-      const data = await res.json();
-      return data;
-    } catch {
-      return fallback;
     }
+
+    const errFallback = Array.isArray(fallback) ? [...(fallback as any[])] : { ...fallback };
+    (errFallback as any).isError = true;
+    return errFallback as any;
   }
 
-  public async getJobs(params: QueryJobsParams = {}): Promise<{ total: number; count: number; data: JobModel[]; jobs: JobModel[] }> {
+  public async getJobs(params: QueryJobsParams = {}): Promise<{
+    total: number;
+    count: number;
+    data: JobModel[];
+    jobs: JobModel[];
+    isError: boolean;
+  }> {
     const searchParams = new URLSearchParams();
     if (params.query) searchParams.set('query', params.query);
     if (params.category) searchParams.set('category', params.category);
@@ -52,10 +88,12 @@ export class WebApiClient {
     const endpoint = `/jobs${qs ? `?${qs}` : ''}`;
     const res = await this.get<{ success: boolean; total: number; count: number; data: JobModel[] }>(
       endpoint,
-      { success: true, total: 0, count: 0, data: [] }
+      { success: false, total: 0, count: 0, data: [] }
     );
     const data = res.data || [];
-    return { total: res.total || 0, count: res.count || 0, data, jobs: data };
+    const isError = !!(res as any).isError || !res.success;
+    (data as any).isError = isError;
+    return { total: res.total || 0, count: res.count || 0, data, jobs: data, isError };
   }
 
   public async getJobBySlug(slug: string): Promise<JobModel | null> {
@@ -66,17 +104,57 @@ export class WebApiClient {
   public async getLatestJobs(limit = 10): Promise<JobModel[]> {
     const res = await this.get<{ success: boolean; count: number; data: JobModel[] }>(
       `/jobs/latest?limit=${limit}`,
-      { success: true, count: 0, data: [] }
+      { success: false, count: 0, data: [] }
     );
-    return res.data || [];
+    const data = res.data || [];
+    (data as any).isError = !!(res as any).isError || !res.success;
+    return data;
   }
 
-  public async getClosingSoonJobs(limit = 10): Promise<JobModel[]> {
+  public async getClosingSoonJobs(limit = 10, days = 14): Promise<JobModel[]> {
     const res = await this.get<{ success: boolean; count: number; data: JobModel[] }>(
-      `/jobs/closing-soon?limit=${limit}`,
-      { success: true, count: 0, data: [] }
+      `/jobs/closing-soon?limit=${limit}&days=${days}`,
+      { success: false, count: 0, data: [] }
     );
-    return res.data || [];
+    const data = res.data || [];
+    (data as any).isError = !!(res as any).isError || !res.success;
+    return data;
+  }
+
+  public async getFilters(): Promise<{
+    categories: string[];
+    qualifications: string[];
+    states: string[];
+    totalPublishedJobs: number;
+  }> {
+    const res = await this.get<{
+      success: boolean;
+      data?: {
+        categories: string[];
+        qualifications: string[];
+        states: string[];
+        totalPublishedJobs: number;
+      };
+    }>('/jobs/filters', {
+      success: true,
+      data: { categories: [], qualifications: [], states: [], totalPublishedJobs: 0 },
+    });
+    return (
+      res.data || {
+        categories: [],
+        qualifications: [],
+        states: [],
+        totalPublishedJobs: 0,
+      }
+    );
+  }
+
+  public async searchJobs(query: string): Promise<{ total: number; data: JobModel[] }> {
+    const res = await this.get<{ success: boolean; query: string; total: number; data: JobModel[] }>(
+      `/jobs/search?q=${encodeURIComponent(query)}`,
+      { success: true, query, total: 0, data: [] }
+    );
+    return { total: res.total || 0, data: res.data || [] };
   }
 
   public async getStates(): Promise<Array<{ name: string; slug: string; activeJobsCount: number }>> {

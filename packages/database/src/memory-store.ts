@@ -119,7 +119,13 @@ export class DevelopmentRepository {
     }
 
     if (params.closingSoonOnly) {
-      result = result.filter((j) => j.status === JobLifecycleStatus.CLOSING_SOON);
+      const now = new Date();
+      const windowMs = 14 * 24 * 60 * 60 * 1000;
+      result = result.filter((j) => {
+        const end = new Date(j.applicationEndDate).getTime();
+        const diff = end - now.getTime();
+        return diff >= 0 && diff <= windowMs;
+      });
     }
 
     const total = result.length;
@@ -136,9 +142,17 @@ export class DevelopmentRepository {
       .slice(0, limit);
   }
 
-  public getClosingSoonJobs(limit = 10): JobModel[] {
+  public getClosingSoonJobs(limit = 10, windowDays = 14): JobModel[] {
+    this.refreshDynamicStatuses();
+    const now = new Date();
+    const windowMs = windowDays * 24 * 60 * 60 * 1000;
+
     return this.getPublishedJobs()
-      .filter((j) => j.status === JobLifecycleStatus.CLOSING_SOON || j.status === JobLifecycleStatus.APPLICATION_OPEN)
+      .filter((j) => {
+        const end = new Date(j.applicationEndDate).getTime();
+        const diff = end - now.getTime();
+        return diff >= 0 && diff <= windowMs;
+      })
       .sort((a, b) => new Date(a.applicationEndDate).getTime() - new Date(b.applicationEndDate).getTime())
       .slice(0, limit);
   }

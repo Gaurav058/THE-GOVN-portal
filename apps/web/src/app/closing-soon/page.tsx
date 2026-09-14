@@ -1,6 +1,7 @@
 import React from 'react';
 import { apiClient } from '../../config/api';
 import { JobCard } from '../../components/JobCard';
+import { EmptyState } from '../../components/EmptyState';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +11,7 @@ export const metadata = {
 };
 
 export default async function ClosingSoonPage() {
-  const jobs = await apiClient.getClosingSoonJobs(30);
+  const jobs = await apiClient.getClosingSoonJobs(30, 14);
 
   return (
     <div className="space-y-6">
@@ -24,11 +25,18 @@ export default async function ClosingSoonPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {jobs.map((job) => (
-          <JobCard key={job.id} job={job} />
-        ))}
-      </div>
+      {jobs.length === 0 ? (
+        <EmptyState
+          message={(jobs as any).isError ? "Government job data is temporarily unavailable." : "No verified recruitments currently closing soon."}
+          subMessage={(jobs as any).isError ? "Please try again shortly. We are reconnecting to official gazette data streams." : "All active government job registration cycles currently have ample time remaining."}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {jobs.map((job) => (
+            <JobCard key={job.id} job={job} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

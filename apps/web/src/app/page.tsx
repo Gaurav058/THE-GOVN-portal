@@ -9,7 +9,7 @@ export default async function HomePage() {
   const [latestJobs, closingSoonJobs, tenthPassRes, twelfthPassRes, gradRes, rrbRes, sscRes, policeRes, defenceRes, bankingRes] =
     await Promise.all([
       apiClient.getLatestJobs(6),
-      apiClient.getClosingSoonJobs(4),
+      apiClient.getClosingSoonJobs(4, 14),
       apiClient.getJobs({ qualification: '10th', limit: 4 }),
       apiClient.getJobs({ qualification: '12th', limit: 4 }),
       apiClient.getJobs({ qualification: 'Graduate', limit: 4 }),

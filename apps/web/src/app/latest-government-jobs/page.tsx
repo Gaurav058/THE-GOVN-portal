@@ -1,6 +1,7 @@
 import React from 'react';
 import { apiClient } from '../../config/api';
 import { JobCard } from '../../components/JobCard';
+import { EmptyState } from '../../components/EmptyState';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,11 +22,18 @@ export default async function LatestJobsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {jobs.map((job) => (
-          <JobCard key={job.id} job={job} />
-        ))}
-      </div>
+      {jobs.length === 0 ? (
+        <EmptyState
+          message={(jobs as any).isError ? "Government job data is temporarily unavailable." : "No verified recruitments currently found in this category."}
+          subMessage={(jobs as any).isError ? "Please try again shortly. We are reconnecting to official gazette data streams." : "Check back shortly or explore closing vacancies and other categories below."}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {jobs.map((job) => (
+            <JobCard key={job.id} job={job} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { apiClient } from '../../config/api';
+import { EmptyState } from '../../components/EmptyState';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,13 @@ export default async function ExamsCalendarPage() {
         </p>
       </div>
 
-      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+      {jobsWithExams.length === 0 ? (
+        <EmptyState
+          message="No examination dates currently scheduled in the active cycle."
+          subMessage="Exam calendars are updated as soon as official conducting commissions issue exam schedules."
+        />
+      ) : (
+        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         <table className="w-full text-left text-xs">
           <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider">
             <tr>
@@ -63,6 +70,7 @@ export default async function ExamsCalendarPage() {
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 }

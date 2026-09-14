@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { apiClient } from '../../../config/api';
 import { JobCard } from '../../../components/JobCard';
 
+import { EmptyState } from '../../../components/EmptyState';
+
 export const dynamic = 'force-dynamic';
 
 export default async function StateJobListingPage({ params }: { params: { state: string } }) {
@@ -29,12 +31,10 @@ export default async function StateJobListingPage({ params }: { params: { state:
       </div>
 
       {result.data.length === 0 ? (
-        <div className="p-12 text-center bg-white rounded border border-slate-200">
-          <p className="text-slate-700 font-semibold text-sm">No specific vacancies currently open for {stateNormalized}.</p>
-          <Link href="/jobs" className="mt-3 inline-block text-xs bg-slate-900 text-white px-4 py-2 rounded">
-            Browse All India Open Vacancies
-          </Link>
-        </div>
+        <EmptyState
+          message={`No verified recruitments currently found for ${stateNormalized}.`}
+          subMessage="Explore central All India vacancies or browse other state recruitment boards below."
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {result.data.map((job) => (
