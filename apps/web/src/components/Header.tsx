@@ -4,7 +4,11 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export function isNavItemActive(href: string, pathname: string): boolean {
+export function isNavItemActive(href: string, rawPathname: string): boolean {
+  const pathname = rawPathname.length > 1 && rawPathname.endsWith('/')
+    ? rawPathname.slice(0, -1)
+    : rawPathname;
+
   if (href === '/') {
     return pathname === '/';
   }
@@ -44,12 +48,19 @@ export function isNavItemActive(href: string, pathname: string): boolean {
 }
 
 export function Header() {
-  const pathname = usePathname() || '/';
+  const rawPathname = usePathname() || '/';
+  const pathname = rawPathname.length > 1 && rawPathname.endsWith('/')
+    ? rawPathname.slice(0, -1)
+    : rawPathname;
+
+  const isClosingSoonActive = isNavItemActive('/closing-soon', pathname);
+  const isAdmitCardsActive = isNavItemActive('/admit-cards', pathname);
+  const isResultsActive = isNavItemActive('/results', pathname);
 
   const navItems = [
     { label: 'Home', href: '/', isActive: isNavItemActive('/', pathname) },
     { label: 'Latest Jobs', href: '/latest-government-jobs', isActive: isNavItemActive('/latest-government-jobs', pathname) },
-    { label: 'Closing Soon', href: '/closing-soon', isActive: isNavItemActive('/closing-soon', pathname) },
+    { label: 'Closing Soon', href: '/closing-soon', isActive: isClosingSoonActive },
     { label: '10th Pass', href: '/jobs/10th-pass', isActive: isNavItemActive('/jobs/10th-pass', pathname) },
     { label: '12th Pass', href: '/jobs/12th-pass', isActive: isNavItemActive('/jobs/12th-pass', pathname) },
     { label: 'Graduate', href: '/jobs/graduation', isActive: isNavItemActive('/jobs/graduation', pathname) },
@@ -61,8 +72,8 @@ export function Header() {
     { label: 'Teaching', href: '/jobs/teaching', isActive: isNavItemActive('/jobs/teaching', pathname) },
     { label: 'By State', href: '/states', isActive: isNavItemActive('/states', pathname) },
     { label: 'Exam Calendar', href: '/exams', isActive: isNavItemActive('/exams', pathname) },
-    { label: 'Admit Cards', href: '/admit-cards', isActive: isNavItemActive('/admit-cards', pathname) },
-    { label: 'Results', href: '/results', isActive: isNavItemActive('/results', pathname) },
+    { label: 'Admit Cards', href: '/admit-cards', isActive: isAdmitCardsActive },
+    { label: 'Results', href: '/results', isActive: isResultsActive },
     { label: 'Articles', href: '/articles', isActive: isNavItemActive('/articles', pathname) },
   ];
 
@@ -141,31 +152,41 @@ export function Header() {
         <div className="hidden lg:flex items-center space-x-2 text-xs font-semibold">
           <Link
             href="/closing-soon"
+            aria-current={isClosingSoonActive ? 'page' : undefined}
+            data-active={isClosingSoonActive ? 'true' : 'false'}
             className={`px-2.5 py-1 rounded transition flex items-center space-x-1 ${
-              pathname === '/closing-soon' || pathname.startsWith('/closing-soon/')
+              isClosingSoonActive
                 ? 'bg-amber-100 text-amber-950 border border-amber-400 ring-1 ring-amber-400 font-bold shadow-sm'
-                : 'bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100'
+                : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 hover:text-slate-900'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse"></span>
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isClosingSoonActive ? 'bg-amber-600 animate-pulse' : 'bg-slate-400'
+              }`}
+            ></span>
             <span>Closing Soon</span>
           </Link>
           <Link
             href="/admit-cards"
+            aria-current={isAdmitCardsActive ? 'page' : undefined}
+            data-active={isAdmitCardsActive ? 'true' : 'false'}
             className={`px-2.5 py-1 rounded transition ${
-              pathname === '/admit-cards' || pathname.startsWith('/admit-cards/')
+              isAdmitCardsActive
                 ? 'bg-purple-100 text-purple-950 border border-purple-400 ring-1 ring-purple-400 font-bold shadow-sm'
-                : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
+                : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 hover:text-slate-900'
             }`}
           >
             Admit Cards
           </Link>
           <Link
             href="/results"
+            aria-current={isResultsActive ? 'page' : undefined}
+            data-active={isResultsActive ? 'true' : 'false'}
             className={`px-2.5 py-1 rounded transition ${
-              pathname === '/results' || pathname.startsWith('/results/')
+              isResultsActive
                 ? 'bg-teal-100 text-teal-950 border border-teal-400 ring-1 ring-teal-400 font-bold shadow-sm'
-                : 'bg-teal-50 text-teal-900 border border-teal-200 hover:bg-teal-100'
+                : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 hover:text-slate-900'
             }`}
           >
             Results
@@ -180,6 +201,8 @@ export function Header() {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={item.isActive ? 'page' : undefined}
+              data-active={item.isActive ? 'true' : 'false'}
               className={`transition ${
                 item.isActive
                   ? 'text-amber-300 font-semibold'
