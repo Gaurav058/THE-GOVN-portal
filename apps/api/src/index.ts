@@ -84,10 +84,13 @@ export function createApp() {
 }
 
 const PORT = process.env.PORT || 4000;
+const app = createApp();
 
 if (require.main === module) {
-  const app = createApp();
   app.listen(PORT, () => {
     console.log(`[API Server] Running on http://localhost:${PORT}/api/v1`);
   });
 }
+
+export default app;
+
