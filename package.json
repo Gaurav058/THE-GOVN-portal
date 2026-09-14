@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build --concurrency=1",
     "dev": "turbo run dev",
     "test": "turbo run test",
     "lint": "turbo run lint",
@@ -17,5 +17,9 @@
     "turbo": "^2.4.0",
     "typescript": "^5.7.3"
   },
-  "packageManager": "pnpm@10.33.0"
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20.9.0",
+    "pnpm": ">=10.0.0"
+  }
 }

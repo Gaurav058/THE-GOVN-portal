@@ -10,20 +10,34 @@ import { SitemapBuilder } from '@govn/seo';
 export function createApp() {
   const app = express();
 
+  const configuredAllowedOrigins = process.env.CORS_ALLOWED_ORIGINS
+    ? process.env.CORS_ALLOWED_ORIGINS.split(',').map((s) => s.trim().toLowerCase())
+    : [];
+
   app.use(
     cors({
       origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps, curl, server-to-server)
         if (!origin) return callback(null, true);
-        // Allow localhost development ports
+
+        const originLower = origin.toLowerCase();
+
+        // 1. Explicitly configured origins in environment variable
+        if (configuredAllowedOrigins.includes(originLower)) {
+          return callback(null, true);
+        }
+
+        // 2. Localhost development ports
         if (/^http:\/\/localhost:(3000|3001|3005|3006|4000)$/.test(origin)) {
           return callback(null, true);
         }
-        // Allow Vercel preview and production domains
+
+        // 3. Vercel preview and production domains
         if (/^https:\/\/.*\.vercel\.app$/.test(origin) || origin.endsWith('govnportal.in')) {
           return callback(null, true);
         }
-        return callback(null, true);
+
+        return callback(new Error(`Origin ${origin} not permitted by CORS policy`));
       },
       credentials: true,
     })
