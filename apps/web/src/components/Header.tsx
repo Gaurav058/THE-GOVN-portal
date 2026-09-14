@@ -1,7 +1,71 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+export function isNavItemActive(href: string, pathname: string): boolean {
+  if (href === '/') {
+    return pathname === '/';
+  }
+
+  // Latest Jobs
+  if (href === '/latest-government-jobs') {
+    return pathname === '/latest-government-jobs' || pathname === '/jobs';
+  }
+
+  // Closing Soon (strict match or sub-paths of closing soon)
+  if (href === '/closing-soon') {
+    return pathname === '/closing-soon' || pathname.startsWith('/closing-soon/');
+  }
+
+  // Graduate
+  if (href === '/jobs/graduation') {
+    return pathname === '/jobs/graduation' || pathname === '/jobs/graduate';
+  }
+
+  // By State
+  if (href === '/states') {
+    return pathname === '/states' || pathname.startsWith('/states/') || pathname === '/jobs/state';
+  }
+
+  // Exam Calendar
+  if (href === '/exams') {
+    return pathname === '/exams' || pathname.startsWith('/exams/') || pathname === '/exam-calendar';
+  }
+
+  // Specific Category Jobs (exact match to prevent collision)
+  if (href.startsWith('/jobs/')) {
+    return pathname === href;
+  }
+
+  // Other section routes
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function Header() {
+  const pathname = usePathname() || '/';
+
+  const navItems = [
+    { label: 'Home', href: '/', isActive: isNavItemActive('/', pathname) },
+    { label: 'Latest Jobs', href: '/latest-government-jobs', isActive: isNavItemActive('/latest-government-jobs', pathname) },
+    { label: 'Closing Soon', href: '/closing-soon', isActive: isNavItemActive('/closing-soon', pathname) },
+    { label: '10th Pass', href: '/jobs/10th-pass', isActive: isNavItemActive('/jobs/10th-pass', pathname) },
+    { label: '12th Pass', href: '/jobs/12th-pass', isActive: isNavItemActive('/jobs/12th-pass', pathname) },
+    { label: 'Graduate', href: '/jobs/graduation', isActive: isNavItemActive('/jobs/graduation', pathname) },
+    { label: 'Railway Jobs', href: '/jobs/railway', isActive: isNavItemActive('/jobs/railway', pathname) },
+    { label: 'SSC', href: '/jobs/ssc', isActive: isNavItemActive('/jobs/ssc', pathname) },
+    { label: 'Police', href: '/jobs/police', isActive: isNavItemActive('/jobs/police', pathname) },
+    { label: 'Defence', href: '/jobs/defence', isActive: isNavItemActive('/jobs/defence', pathname) },
+    { label: 'Banking', href: '/jobs/banking', isActive: isNavItemActive('/jobs/banking', pathname) },
+    { label: 'Teaching', href: '/jobs/teaching', isActive: isNavItemActive('/jobs/teaching', pathname) },
+    { label: 'By State', href: '/states', isActive: isNavItemActive('/states', pathname) },
+    { label: 'Exam Calendar', href: '/exams', isActive: isNavItemActive('/exams', pathname) },
+    { label: 'Admit Cards', href: '/admit-cards', isActive: isNavItemActive('/admit-cards', pathname) },
+    { label: 'Results', href: '/results', isActive: isNavItemActive('/results', pathname) },
+    { label: 'Articles', href: '/articles', isActive: isNavItemActive('/articles', pathname) },
+  ];
+
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
       {/* Top Gazette Alert Bar */}
@@ -42,7 +106,11 @@ export function Header() {
           <div className="md:hidden">
             <Link
               href="/jobs"
-              className="text-xs bg-indigo-50 text-indigo-700 font-semibold px-3 py-1.5 rounded border border-indigo-200"
+              className={`text-xs font-semibold px-3 py-1.5 rounded border transition ${
+                pathname === '/jobs' || pathname === '/latest-government-jobs'
+                  ? 'bg-indigo-600 text-white border-indigo-700 font-bold shadow-sm'
+                  : 'bg-indigo-50 text-indigo-700 font-semibold border-indigo-200 hover:bg-indigo-100'
+              }`}
             >
               Search All
             </Link>
@@ -71,14 +139,35 @@ export function Header() {
 
         {/* Quick Badges */}
         <div className="hidden lg:flex items-center space-x-2 text-xs font-semibold">
-          <Link href="/closing-soon" className="px-2.5 py-1 rounded bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 transition flex items-center space-x-1">
+          <Link
+            href="/closing-soon"
+            className={`px-2.5 py-1 rounded transition flex items-center space-x-1 ${
+              pathname === '/closing-soon' || pathname.startsWith('/closing-soon/')
+                ? 'bg-amber-100 text-amber-950 border border-amber-400 ring-1 ring-amber-400 font-bold shadow-sm'
+                : 'bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100'
+            }`}
+          >
             <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse"></span>
             <span>Closing Soon</span>
           </Link>
-          <Link href="/admit-cards" className="px-2.5 py-1 rounded bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100 transition">
+          <Link
+            href="/admit-cards"
+            className={`px-2.5 py-1 rounded transition ${
+              pathname === '/admit-cards' || pathname.startsWith('/admit-cards/')
+                ? 'bg-purple-100 text-purple-950 border border-purple-400 ring-1 ring-purple-400 font-bold shadow-sm'
+                : 'bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100'
+            }`}
+          >
             Admit Cards
           </Link>
-          <Link href="/results" className="px-2.5 py-1 rounded bg-teal-50 text-teal-900 border border-teal-200 hover:bg-teal-100 transition">
+          <Link
+            href="/results"
+            className={`px-2.5 py-1 rounded transition ${
+              pathname === '/results' || pathname.startsWith('/results/')
+                ? 'bg-teal-100 text-teal-950 border border-teal-400 ring-1 ring-teal-400 font-bold shadow-sm'
+                : 'bg-teal-50 text-teal-900 border border-teal-200 hover:bg-teal-100'
+            }`}
+          >
             Results
           </Link>
         </div>
@@ -87,48 +176,19 @@ export function Header() {
       {/* Primary Category Navigation Bar */}
       <nav className="bg-slate-900 text-slate-200 text-xs border-t border-slate-800 overflow-x-auto">
         <div className="max-w-7xl mx-auto px-4 flex items-center space-x-6 h-10 whitespace-nowrap font-medium">
-          <Link href="/" className="hover:text-amber-400 transition font-bold text-white">
-            Home
-          </Link>
-          <Link href="/latest-government-jobs" className="hover:text-amber-400 transition">
-            Latest Jobs
-          </Link>
-          <Link href="/closing-soon" className="hover:text-amber-400 transition text-amber-300 font-semibold">
-            Closing Soon
-          </Link>
-          <Link href="/jobs/10th-pass" className="hover:text-amber-400 transition">
-            10th Pass
-          </Link>
-          <Link href="/jobs/12th-pass" className="hover:text-amber-400 transition">
-            12th Pass
-          </Link>
-          <Link href="/jobs/graduation" className="hover:text-amber-400 transition">
-            Graduate
-          </Link>
-          <Link href="/jobs/railway" className="hover:text-amber-400 transition">
-            Railway Jobs
-          </Link>
-          <Link href="/jobs/ssc" className="hover:text-amber-400 transition">
-            SSC
-          </Link>
-          <Link href="/jobs/police" className="hover:text-amber-400 transition">
-            Police
-          </Link>
-          <Link href="/jobs/defence" className="hover:text-amber-400 transition">
-            Defence
-          </Link>
-          <Link href="/jobs/banking" className="hover:text-amber-400 transition">
-            Banking
-          </Link>
-          <Link href="/jobs/teaching" className="hover:text-amber-400 transition">
-            Teaching
-          </Link>
-          <Link href="/states" className="hover:text-amber-400 transition">
-            By State
-          </Link>
-          <Link href="/exams" className="hover:text-amber-400 transition">
-            Exam Calendar
-          </Link>
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`transition ${
+                item.isActive
+                  ? 'text-amber-300 font-semibold'
+                  : 'text-slate-200 hover:text-amber-400 font-medium'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
         </div>
       </nav>
     </header>
