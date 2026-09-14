@@ -1,20 +1,52 @@
 import { JobModel, JobLifecycleStatus, VerificationStatus, AdminDashboardMetrics, VerificationReviewItem, AuditLogEntry } from '@govn/types';
 import { VERIFIED_CURRENT_JOBS_2026 } from './seed/verified-data';
 import { JobLifecycleEngine } from './lifecycle';
+import { IJobRepository, JobFilterParams } from './repository.interface';
 
-export interface JobFilterParams {
-  query?: string;
-  category?: string;
-  qualification?: string;
-  state?: string;
-  status?: JobLifecycleStatus;
-  closingSoonOnly?: boolean;
-  limit?: number;
-  offset?: number;
-}
+export type { JobFilterParams };
 
-export class DevelopmentRepository {
+export class DevelopmentRepository implements IJobRepository {
+  public readonly isPostgres = false;
   private jobs: JobModel[] = [...VERIFIED_CURRENT_JOBS_2026];
+
+  public async healthCheck(): Promise<{ isConnected: boolean; engine: string; count: number }> {
+    return {
+      isConnected: true,
+      engine: 'In-Memory Development Store',
+      count: this.getPublishedJobs().length,
+    };
+  }
+
+  public getFilters() {
+    const jobs = this.getPublishedJobs();
+    const categories = Array.from(new Set(jobs.map((j) => j.categoryName))).sort();
+    const qualifications = ['10th Pass', '12th Pass', 'ITI', 'Diploma', 'Graduate', 'Post Graduate', 'BTech'];
+    const states = Array.from(new Set(jobs.map((j) => j.stateName || 'All India'))).sort();
+    return {
+      categories,
+      qualifications,
+      states,
+      totalPublishedJobs: jobs.length,
+    };
+  }
+
+  public getStates() {
+    const jobs = this.getPublishedJobs();
+    const map = new Map<string, { name: string; slug: string; activeJobsCount: number }>();
+    for (const j of jobs) {
+      if (j.stateName && j.stateId) {
+        const entry = map.get(j.stateId) || {
+          name: j.stateName,
+          slug: j.stateName.toLowerCase().replace(/\s+/g, '-'),
+          activeJobsCount: 0,
+        };
+        entry.activeJobsCount++;
+        map.set(j.stateId, entry);
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   private auditLogs: AuditLogEntry[] = [
     {
       id: 'audit-init-01',
@@ -266,4 +298,3 @@ export class DevelopmentRepository {
   }
 }
 
-export const dbRepository = new DevelopmentRepository();

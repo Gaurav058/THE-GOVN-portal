@@ -1,10 +1,9 @@
 {
   "version": 2,
-  "buildCommand": "tsc --build",
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/api/index.ts"
+      "destination": "/api"
     }
   ]
 }

@@ -14,8 +14,10 @@ async function runAudit() {
   // ---------------------------------------------------------------------------
   console.log('--- 2. DATA ORIGIN AUDIT ---');
   const databaseUrl = process.env.DATABASE_URL;
+  const health = await dbRepository.healthCheck();
   console.log('DATABASE_URL configured:', databaseUrl ? 'YES (PostgreSQL)' : 'NO (Using DevelopmentRepository / In-Memory verified store)');
-  console.log('Data layer:', 'DevelopmentRepository (backed by VERIFIED_CURRENT_JOBS_2026 in memory-store.ts)');
+  console.log('Data layer:', health.engine);
+  console.log('Repository isPostgres:', dbRepository.isPostgres ? 'YES (Prisma/PostgreSQL)' : 'NO (In-memory development store)');
   console.log('Prisma schema exists:', 'YES (packages/database/prisma/schema.prisma with 30+ tables)');
   console.log('Are jobs fabricated demo data?: NO — 12 Authentic, gazetted 2026 government recruitment notifications with official government URLs.');
   console.log('');
@@ -24,8 +26,8 @@ async function runAudit() {
   // SECTION 3: DATABASE INVENTORY
   // ---------------------------------------------------------------------------
   console.log('--- 3. DATABASE INVENTORY METRICS ---');
-  const allJobs = dbRepository.getAllJobs();
-  const publishedJobs = dbRepository.getPublishedJobs();
+  const allJobs = await dbRepository.getAllJobs();
+  const publishedJobs = await dbRepository.getPublishedJobs();
   const verifiedJobs = allJobs.filter((j) => j.verificationStatus === 'VERIFIED');
   const unverifiedJobs = allJobs.filter((j) => j.verificationStatus !== 'VERIFIED');
   const withNotificationUrl = allJobs.filter((j) => j.officialNotificationUrl && j.officialNotificationUrl.startsWith('https://'));
@@ -57,6 +59,7 @@ async function runAudit() {
 
   const testEndpoints = [
     { name: 'GET /health', url: `http://localhost:${port}/health` },
+    { name: 'GET /health/dependencies', url: `http://localhost:${port}/health/dependencies` },
     { name: 'GET /api/v1/jobs', url: `${baseUrl}/jobs` },
     { name: 'GET /api/v1/jobs/latest', url: `${baseUrl}/jobs/latest` },
     { name: 'GET /api/v1/jobs/closing-soon', url: `${baseUrl}/jobs/closing-soon` },

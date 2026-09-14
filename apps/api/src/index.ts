@@ -61,16 +61,21 @@ export function createApp() {
   });
 
   // Safe dependency health diagnostics (no secrets leaked)
-  app.get('/health/dependencies', (_req, res) => {
-    const publishedCount = dbRepository.getPublishedJobs().length;
+  app.get('/health/dependencies', async (_req, res) => {
+    const health = await dbRepository.healthCheck();
 
     res.json({
-      status: 'HEALTHY',
+      status: health.isConnected ? 'HEALTHY' : 'DEGRADED',
       service: 'THE-GOVN-portal API',
       timestamp: new Date().toISOString(),
       dependencies: {
         api: { status: 'UP', uptimeSeconds: Math.floor(process.uptime()) },
-        database: { status: 'UP', engine: 'PostgreSQL / Prisma Repository', recordCount: publishedCount },
+        database: {
+          status: health.isConnected ? 'UP' : 'DOWN',
+          engine: health.engine,
+          repository: dbRepository.isPostgres ? 'prisma/postgres' : 'memory-store',
+          recordCount: health.count,
+        },
         queue: { status: 'UP', engine: 'BullMQ / Memory Event Stream' },
         sourceAdapters: { status: 'UP', registeredAdaptersCount: 7, healthyAdaptersCount: 7 },
       },
@@ -84,8 +89,8 @@ export function createApp() {
   app.use('/api/v1', taxonomiesRouter);
 
   // Dynamic XML Sitemaps
-  app.get('/sitemap-jobs.xml', (_req, res) => {
-    const jobs = dbRepository.getPublishedJobs();
+  app.get('/sitemap-jobs.xml', async (_req, res) => {
+    const jobs = await dbRepository.getPublishedJobs();
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://govnportal.in';
 
     const entries = jobs.map((j) => ({

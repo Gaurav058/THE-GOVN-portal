@@ -19,7 +19,16 @@ export class WebApiClient {
   private baseUrl: string;
 
   constructor(baseUrl = API_BASE_URL) {
-    this.baseUrl = baseUrl.replace(/\/$/, '');
+    let clean = baseUrl.replace(/\/$/, '');
+    // Ensure base URL ends with /api/v1 if a naked host is provided
+    if (!clean.endsWith('/api/v1') && !clean.endsWith('/api/v1/')) {
+      if (clean.endsWith('/api')) {
+        clean = `${clean}/v1`;
+      } else {
+        clean = `${clean}/api/v1`;
+      }
+    }
+    this.baseUrl = clean.replace(/\/$/, '');
   }
 
   private async get<T>(endpoint: string, fallback: T, retries = 1): Promise<T & { isError?: boolean }> {
