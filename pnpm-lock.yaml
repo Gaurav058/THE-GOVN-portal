@@ -23,9 +23,6 @@ importers:
 
   apps/admin:
     dependencies:
-      '@govn/database':
-        specifier: workspace:*
-        version: link:../../packages/database
       '@govn/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -109,9 +106,6 @@ importers:
 
   apps/web:
     dependencies:
-      '@govn/database':
-        specifier: workspace:*
-        version: link:../../packages/database
       '@govn/seo':
         specifier: workspace:*
         version: link:../../packages/seo
