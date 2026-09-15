@@ -295,9 +295,9 @@ export class PrismaRepository implements IJobRepository {
     const qualifications = ['10th Pass', '12th Pass', 'ITI', 'Diploma', 'Graduate', 'Post Graduate', 'BTech'];
 
     return {
-      categories: categories.map((c) => c.name),
+      categories: categories.map((c: { name: string }) => c.name),
       qualifications,
-      states: states.map((s) => s.name),
+      states: states.map((s: { name: string }) => s.name),
       totalPublishedJobs,
     };
   }
@@ -312,7 +312,7 @@ export class PrismaRepository implements IJobRepository {
       orderBy: { name: 'asc' },
     });
 
-    return states.map((s) => ({
+    return states.map((s: { name: string; slug: string; _count: { jobs: number } }) => ({
       name: s.name,
       slug: s.slug,
       activeJobsCount: s._count.jobs,
@@ -390,7 +390,7 @@ export class PrismaRepository implements IJobRepository {
       take: 20,
     });
 
-    return pendings.map((p) => ({
+    return pendings.map((p: any) => ({
       jobId: p.id,
       title: p.title,
       organization: p.organization.name,
@@ -450,7 +450,7 @@ export class PrismaRepository implements IJobRepository {
       take: 50,
     });
 
-    return logs.map((l) => ({
+    return logs.map((l: any) => ({
       id: l.id,
       adminId: l.adminId || 'system',
       adminName: l.admin?.fullName || 'System Automated Engine',

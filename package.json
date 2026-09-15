@@ -9,13 +9,23 @@
     "lint": "turbo run lint",
     "db:generate": "pnpm --filter @govn/database generate",
     "db:push": "pnpm --filter @govn/database push",
-    "db:seed": "pnpm --filter @govn/database seed"
+    "db:seed": "pnpm --filter @govn/database seed",
+    "postinstall": "pnpm --filter @govn/database generate"
   },
   "devDependencies": {
     "@types/node": "^22.13.9",
     "tsx": "^4.19.3",
     "turbo": "^2.4.0",
     "typescript": "^5.7.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "esbuild",
+      "unrs-resolver"
+    ]
   },
   "packageManager": "pnpm@10.33.0",
   "engines": {
